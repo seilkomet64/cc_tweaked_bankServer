@@ -1,3 +1,4 @@
+require(settings.get("ghu.base") .. "core/apis/ghu")
 local bankController = require("bankController")
 require("config")
 

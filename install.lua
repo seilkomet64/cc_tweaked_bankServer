@@ -1,5 +1,5 @@
 -- tweak for your repo
-local installRepo = ""
+local installRepo = "seilkomet64/cc_tweaked_bankServer"
 local ref = "" -- leave blank for master
 local repoPath = "" -- leave blank for /src
 local minified = nil -- wheter or not to force your install to be minified

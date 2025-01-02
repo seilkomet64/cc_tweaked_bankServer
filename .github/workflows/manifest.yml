@@ -1,0 +1,59 @@
+name: Generate Manifest
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/manifest.yml
+      - .bin/manifest.sh
+      - '**.lua'
+      - '**/help/*.txt'
+      - '**/deps.json'
+      - '!**.min.lua'
+      - '!install.lua'
+
+env:
+  MODULES: |-
+    src
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install npm
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install luamin
+      run: sudo npm install -g luamin
+
+    - name: Generate Manifest
+      run: |-
+        for module in $MODULES; do
+          echo "Generate manifest for /${module}..."
+          cd ${GITHUB_WORKSPACE}/${module}
+          bash ${GITHUB_WORKSPACE}/.bin/manifest.sh
+        done
+
+    - name: Commit Changes
+      run: |-
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+
+        cd ${GITHUB_WORKSPACE}
+        for module in $MODULES; do
+          git add ${GITHUB_WORKSPACE}/${module}/*
+        done
+
+        if [[ -n $(git diff --name-only --cached) ]]; then
+          git commit -m "Generate new manifest"
+          git push
+        fi

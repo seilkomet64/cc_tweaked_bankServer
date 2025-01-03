@@ -27,9 +27,9 @@ local function logRequest(atmNumber, requestType, acc, targetAcc, startBalance, 
 end
 
 local function StartBankingSystem()
-    local modems
+    local modems = {}
     print("Searching for wireless modem...")
-    while not modems do
+    while not modems[1] do
         modems = { peripheral.find("modem", function(name, modem)
             return modem.isWireless() -- Check this modem is wireless.
         end) }
@@ -41,7 +41,7 @@ local function StartBankingSystem()
     end
 
     print("Modem Found.")
-    rednet.open(modems[1])
+    rednet.open(peripheral.getName(modems[1]))
     rednet.host("bank", "bankController")
 
     -- message balance = {atmNumber, type, acc, pin} -> balance

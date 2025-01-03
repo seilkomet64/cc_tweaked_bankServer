@@ -1,8 +1,5 @@
 local bankAPI = require("bankAPI")
-peripheral.find("modem", rednet.open)
-
 local protocol = "bank"
-rednet.host(protocol, "bankController")
 
 local function logRequest(atmNumber, requestType, acc, targetAcc, startBalance, endBalance)
     local logFile = fs.open("bank_log.txt", "a")
@@ -30,6 +27,23 @@ local function logRequest(atmNumber, requestType, acc, targetAcc, startBalance, 
 end
 
 local function StartBankingSystem()
+    local modems
+    print("Searching for wireless modem...")
+    while not modems do
+        modems = { peripheral.find("modem", function(name, modem)
+            return modem.isWireless() -- Check this modem is wireless.
+        end) }
+        if not modems[1] then
+            print("No wireless modem found")
+            print("Please connect a wireless modem to continue")
+            sleep(5)
+        end
+    end
+
+    print("Modem Found.")
+    rednet.open(modems[1])
+    rednet.host("bank", "bankController")
+
     -- message balance = {atmNumber, type, acc, pin} -> balance
     -- message deposit = {atmNumber, type, acc, digitalIDs, pin} -> balance
     -- message withdraw = {atmNumber, type, acc, amount, pin} -> digitalIDs, balance

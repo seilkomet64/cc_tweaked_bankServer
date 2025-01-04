@@ -1,1 +1,1 @@
-require(settings.get("ghu.base").."core/apis/ghu")local a=require("bankController")require("config")term.clear()print("Welcome to BankOS")a.StartBankingSystem()
+require(settings.get("ghu.base").."core/apis/ghu")local a=require("bankController")local b=require("bankAPI")require("config")term.clear()print("Welcome to BankOS")parallel.waitForAny(a.StartBankingSystem,b.checkPendingTransactions())

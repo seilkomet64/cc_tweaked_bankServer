@@ -107,6 +107,8 @@ local function StartBankingSystem()
         elseif message.type == "checkCard" then
             rednet.send(computer_id, {success = true, status = bankAPI.checkCard(message.acc)}, protocol)
             logRequest(message.atmNumber, message.type, message.acc)
+        elseif message.type == "confirmTransaction" then
+            bankAPI.confirmTransaction(message.acc)
         end
     end
 end

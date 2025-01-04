@@ -9,6 +9,53 @@ local function overwriteFile(acc, newBalance, pin)
     file.close()
 end
 
+-- When withrdawing we store the transaction for a while and revert it if not confirmed	
+local pendingTransactions = {}
+
+local function storePendingTransaction(acc, digitalIDs)
+    local timestamp = os.time()
+    pendingTransactions[acc] = {digitalIDs = digitalIDs, timestamp = timestamp}
+end
+
+local function revertTransaction(acc)
+    if pendingTransactions[acc] then
+        local transaction = pendingTransactions[acc]
+        local file = fs.open("account/"..acc, "r")
+        local balance = tonumber(file.readLine())
+        local correctPin = file.readLine()
+        file.close()
+        local amount = itemManager.materializeItems(transaction.digitalIDs)
+        balance = balance + amount
+        overwriteFile(acc, balance, correctPin)
+        pendingTransactions[acc] = nil
+        return true, "Transaction reverted"
+    else
+        return false, "No pending transaction found"
+    end
+end
+
+local function checkPendingTransactions()
+    while true do
+        local currentTime = os.time()
+        for acc, transaction in pairs(pendingTransactions) do
+            if currentTime - transaction.timestamp > CONFIG.TRANSACTION_TIMEOUT then
+                revertTransaction(acc)
+                print("Withdraw for account "..acc.." reverted")
+            end
+        end
+        sleep(5) -- Check every 5 second
+    end
+end
+
+-- Start the coroutine to check pending transactions
+parallel.waitForAny(checkPendingTransactions)
+
+function bankAPI.confirmTransaction(acc)
+    if pendingTransactions[acc] then
+        pendingTransactions[acc] = nil
+    end
+end
+
 function bankAPI.deposit(acc, digitalIDs, pin)
     local file = fs.open("account/"..acc, "r")
 
@@ -66,6 +113,7 @@ function bankAPI.withdraw(acc, amount, pin)
                 else
                     balance = balance - amount
                     overwriteFile(acc, balance, correctPin)
+                    storePendingTransaction(acc, result)
 
                     return true, result, balance
                 end

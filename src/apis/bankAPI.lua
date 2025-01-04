@@ -34,7 +34,7 @@ local function revertTransaction(acc)
     end
 end
 
-local function checkPendingTransactions()
+function bankAPI.checkPendingTransactions()
     while true do
         local currentTime = os.time()
         for acc, transaction in pairs(pendingTransactions) do
@@ -46,9 +46,6 @@ local function checkPendingTransactions()
         sleep(5) -- Check every 5 second
     end
 end
-
--- Start the coroutine to check pending transactions
-parallel.waitForAny(checkPendingTransactions)
 
 function bankAPI.confirmTransaction(acc)
     if pendingTransactions[acc] then

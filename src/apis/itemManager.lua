@@ -18,6 +18,8 @@ local function getCurrency(itemName)
     return total
 end
 
+-- Materialize Items from a list of IDs
+-- @return the total amount of items materialized
 local function materializeItems(digitizedIds)
     local count = 0
 
@@ -34,11 +36,12 @@ local function materializeItems(digitizedIds)
             end
         end
 
-        local item = digitizer.getIDInfo(id).item
-        count = count + item.count
+        local success, item = pcall(function() return digitizer.getIDInfo(id).item end)
 
-        digitizer.rematerialize(id)
-        digitizer.pushItems(peripheral.getName(inventory), 1)
+        if success then
+            digitizer.rematerialize(id)
+            digitizer.pushItems(peripheral.getName(inventory), 1)
+        end
     end
 
     return count

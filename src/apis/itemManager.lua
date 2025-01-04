@@ -41,6 +41,8 @@ local function materializeItems(digitizedIds)
         if success then
             digitizer.rematerialize(id)
             digitizer.pushItems(peripheral.getName(inventory), 1)
+        else
+            return "Unable to find id for materialization"
         end
     end
 

@@ -25,6 +25,7 @@ local function revertTransaction(acc)
         local correctPin = file.readLine()
         file.close()
         local amount = itemManager.materializeItems(transaction.digitalIDs)
+        if not tonumber(amount) then return false, "Error while reverting transaction" end
         balance = balance + amount
         overwriteFile(acc, balance, correctPin)
         pendingTransactions[acc] = nil
@@ -39,8 +40,12 @@ function bankAPI.checkPendingTransactions()
         local currentTime = os.time()
         for acc, transaction in pairs(pendingTransactions) do
             if currentTime - transaction.timestamp > CONFIG.TRANSACTION_TIMEOUT then
-                revertTransaction(acc)
-                print("Withdraw for account "..acc.." reverted")
+                local success, result = revertTransaction(acc)
+                if not success then
+                    print(result)
+                else
+                    print("Withdraw for account "..acc.." reverted")
+                end
             end
         end
         sleep(5) -- Check every 5 second

@@ -4,7 +4,7 @@
     "apis/bankController.lua": "46c4ca1c2e526629351cdde751c136ddded56d6805030bc2a657600e70139bf1",
     "apis/bankAPI.lua": "a06990e37542623b71120f10fab4ffbb4aaf6172f5c46b2630f8b0da64719a2d",
     "apis/config.lua": "9154afbf24270fc654190d112256428d3b2730ee45ee4e23ddb96a3ab595d427",
-    "apis/itemManager.lua": "effc1ed7f6cef55a77e56ce85b1e112c16d9fd859ce0d38a8b02a442b0068568"
+    "apis/itemManager.lua": "5cf4278ef081cde31c8711b40e55bedc6e488a3c321fe3d869c647578a4afa80"
   },
   "dependencies": []
 }

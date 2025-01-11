@@ -26,9 +26,11 @@ local function revertTransaction(acc)
         file.close()
         local amount = itemManager.materializeItems(transaction.digitalIDs)
         if not tonumber(amount) then return false, "Error while reverting transaction" end
+        local oldBalance = balance
         balance = balance + amount * CONFIG.EXCHANGERATE
         overwriteFile(acc, balance, correctPin)
         pendingTransactions[acc] = nil
+        print(string.format("Transaction for account %s reverted from balance %s to %s", acc, balance, oldBalance))
         return true, "Transaction reverted"
     else
         return false, "No pending transaction found"
@@ -43,8 +45,6 @@ function bankAPI.checkPendingTransactions()
                 local success, result = revertTransaction(acc)
                 if not success then
                     print(result)
-                else
-                    print("Withdraw for account "..acc.." reverted")
                 end
             end
         end

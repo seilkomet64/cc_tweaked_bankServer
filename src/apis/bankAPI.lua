@@ -9,54 +9,84 @@ local function overwriteFile(acc, newBalance, pin)
     file.close()
 end
 
--- When withrdawing we store the transaction for a while and revert it if not confirmed	
+-- When withdrawing, we store the transactions for a while and revert them if not confirmed
 local pendingTransactions = {}
 
 local function storePendingTransaction(acc, digitalIDs)
     local timestamp = os.time(os.date("*t"))
-    pendingTransactions[acc] = {digitalIDs = digitalIDs, timestamp = timestamp}
+    if not pendingTransactions[acc] then
+        pendingTransactions[acc] = {} -- Initialize a list for the account if it doesn't exist
+    end
+    table.insert(pendingTransactions[acc], {digitalIDs = digitalIDs, timestamp = timestamp})
+    return #pendingTransactions[acc]
 end
 
-local function revertTransaction(acc)
-    if pendingTransactions[acc] then
-        local transaction = pendingTransactions[acc]
+local function revertTransaction(acc, transactionIndex)
+    if pendingTransactions[acc] and pendingTransactions[acc][transactionIndex] then
+        local transaction = pendingTransactions[acc][transactionIndex]
         local file = fs.open("account/"..acc, "r")
         local balance = tonumber(file.readLine())
         local correctPin = file.readLine()
         file.close()
         local amount = itemManager.materializeItems(transaction.digitalIDs)
-        if not tonumber(amount) then return false, "Error while reverting transaction" end
+        if not tonumber(amount) then
+            return false, string.format("Error while reverting transaction #%d for account %s", transactionIndex, acc)
+        end
         local oldBalance = balance
         balance = balance + amount * CONFIG.EXCHANGERATE
         overwriteFile(acc, balance, correctPin)
-        pendingTransactions[acc] = nil
-        print(string.format("Transaction for account %s reverted from balance %s to %s", acc, balance, oldBalance))
+
+        -- Remove the reverted transaction from the list
+        table.remove(pendingTransactions[acc], transactionIndex)
+
+        -- Clean up the account if no more transactions are pending
+        if #pendingTransactions[acc] == 0 then
+            pendingTransactions[acc] = nil
+        end
+
+        print(string.format("Transaction #%d for account %s reverted from balance %s to %s", transactionIndex, acc, oldBalance, balance))
         return true, "Transaction reverted"
     else
-        return false, "No pending transaction found"
+        return false, string.format("No pending transaction #%d found for account %s", transactionIndex, acc)
     end
 end
 
 function bankAPI.checkPendingTransactions()
     while true do
         local currentTime = os.time(os.date("*t"))
-        for acc, transaction in pairs(pendingTransactions) do
-            if currentTime - transaction.timestamp > CONFIG.TRANSACTION_TIMEOUT then
-                local success, result = revertTransaction(acc)
-                if not success then
-                    print(result)
+        for acc, transactions in pairs(pendingTransactions) do
+            for i = #transactions, 1, -1 do -- Iterate backward to safely remove items
+                local transaction = transactions[i]
+                if currentTime - transaction.timestamp > CONFIG.TRANSACTION_TIMEOUT then
+                    -- Revert the expired transaction
+                    local success, result = revertTransaction(acc, i)
+                    if not success then
+                        print(result)
+                    end
                 end
             end
         end
-        sleep(5) -- Check every 5 second
+        sleep(5) -- Check every 5 seconds
     end
 end
 
-function bankAPI.confirmTransaction(acc)
-    if pendingTransactions[acc] then
-        pendingTransactions[acc] = nil
+function bankAPI.confirmTransaction(acc, transactionIndex)
+    if pendingTransactions[acc] and pendingTransactions[acc][transactionIndex] then
+        -- Confirm and remove the specific transaction
+        table.remove(pendingTransactions[acc], transactionIndex)
+
+        -- Clean up the account if no more transactions are pending
+        if #pendingTransactions[acc] == 0 then
+            pendingTransactions[acc] = nil
+        end
+
+        return true, "Transaction confirmed"
+    else
+        return false, string.format("No pending transaction #%d found for account %s", transactionIndex, acc)
     end
 end
+
+-- API 
 
 function bankAPI.deposit(acc, digitalIDs, pin)
     local file = fs.open("account/"..acc, "r")
@@ -115,9 +145,9 @@ function bankAPI.withdraw(acc, amount, pin)
                 else
                     balance = balance - amount * CONFIG.EXCHANGERATE
                     overwriteFile(acc, balance, correctPin)
-                    storePendingTransaction(acc, result)
+                    local transactionIndex = storePendingTransaction(acc, result)
 
-                    return true, result, balance
+                    return true, result, balance, transactionIndex
                 end
             else
                 return false, "Insufficient Funds"

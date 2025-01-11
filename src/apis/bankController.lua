@@ -76,11 +76,11 @@ local function StartBankingSystem()
                 logRequest(message.atmNumber, "deposit", message.acc, nil, oldBalance, newBalance)
             end
         elseif message.type == "withdraw" then
-            local success, digitalIDs, newBalance = bankAPI.withdraw(message.acc, message.amount, message.pin)
+            local success, digitalIDs, newBalance, transactionID = bankAPI.withdraw(message.acc, message.amount, message.pin)
             if not success then
                 rednet.send(computer_id, {success = false, error = digitalIDs}, protocol)
             else
-                rednet.send(computer_id, {success = true, ids = digitalIDs}, protocol)
+                rednet.send(computer_id, {success = true, ids = digitalIDs, transactionID = transactionID}, protocol)
                 logRequest(message.atmNumber, "withdraw", message.acc, nil, newBalance + message.amount * CONFIG.EXCHANGERATE, newBalance)
             end
         elseif message.type == "transfer" then
@@ -108,7 +108,7 @@ local function StartBankingSystem()
             rednet.send(computer_id, {success = true, status = bankAPI.checkCard(message.acc)}, protocol)
             logRequest(message.atmNumber, message.type, message.acc)
         elseif message.type == "confirmTransaction" then
-            bankAPI.confirmTransaction(message.acc)
+            bankAPI.confirmTransaction(message.acc, message.transactionID)
         end
     end
 end

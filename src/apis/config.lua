@@ -5,4 +5,4 @@ CONFIG.CURRENCYNAME = "Diamond" -- What the currency name is
 CONFIG.CURRENCYSTACKSIZE = 64
 CONFIG.EXCHANGERATE = 10 -- 1:X 
 CONFIG.COINNAME = "Neuros"  -- Name of the Coin
-TRANSACTION_TIMEOUT = 60 -- Timeout for withdrawals in seconds
+CONFIG.TRANSACTION_TIMEOUT = 60 -- Timeout for withdrawals in seconds

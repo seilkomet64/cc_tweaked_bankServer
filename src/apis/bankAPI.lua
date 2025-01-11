@@ -13,7 +13,7 @@ end
 local pendingTransactions = {}
 
 local function storePendingTransaction(acc, digitalIDs)
-    local timestamp = os.time()
+    local timestamp = os.time(os.date("*t"))
     pendingTransactions[acc] = {digitalIDs = digitalIDs, timestamp = timestamp}
 end
 
@@ -37,7 +37,7 @@ end
 
 function bankAPI.checkPendingTransactions()
     while true do
-        local currentTime = os.time()
+        local currentTime = os.time(os.date("*t"))
         for acc, transaction in pairs(pendingTransactions) do
             if currentTime - transaction.timestamp > CONFIG.TRANSACTION_TIMEOUT then
                 local success, result = revertTransaction(acc)

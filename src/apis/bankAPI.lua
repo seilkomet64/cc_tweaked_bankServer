@@ -26,7 +26,7 @@ local function revertTransaction(acc)
         file.close()
         local amount = itemManager.materializeItems(transaction.digitalIDs)
         if not tonumber(amount) then return false, "Error while reverting transaction" end
-        balance = balance + amount
+        balance = balance + amount * CONFIG.EXCHANGERATE
         overwriteFile(acc, balance, correctPin)
         pendingTransactions[acc] = nil
         return true, "Transaction reverted"
@@ -113,7 +113,7 @@ function bankAPI.withdraw(acc, amount, pin)
                         return false, "Unknown Server Error"
                     end
                 else
-                    balance = balance - amount
+                    balance = balance - amount * CONFIG.EXCHANGERATE
                     overwriteFile(acc, balance, correctPin)
                     storePendingTransaction(acc, result)
 

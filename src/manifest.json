@@ -1,8 +1,8 @@
 {
   "files": {
     "autorun/startup.lua": "c3f57976db205dad75c296bcd190d5799d4fee6a13769f74499d22c81d26412c",
-    "apis/bankController.lua": "0142aa25b16a7244cb6a3fa2a38eb19c5c513ccbf6ef3e274e40221be7541edc",
-    "apis/bankAPI.lua": "495692376a12a1a8604157b152e6b194ea49aa2f058ba6c9913b3ae01d07aeed",
+    "apis/bankController.lua": "a0994d6d4683dca339802545625e13586b77bfc21cd69318b0c7edb4ac0f3a64",
+    "apis/bankAPI.lua": "40f6cc08eeee5100a2a24d2ff701940469021bf4b4c60971930db1f005b179be",
     "apis/config.lua": "8dbd5d743bb978589998b416a35c7e73fc0546fe4d62b3dcabfe1a2c60270bcd",
     "apis/itemManager.lua": "5cf4278ef081cde31c8711b40e55bedc6e488a3c321fe3d869c647578a4afa80"
   },

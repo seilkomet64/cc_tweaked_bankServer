@@ -81,7 +81,7 @@ local function StartBankingSystem()
                 rednet.send(computer_id, {success = false, error = digitalIDs}, protocol)
             else
                 rednet.send(computer_id, {success = true, ids = digitalIDs}, protocol)
-                logRequest(message.atmNumber, "withdraw", message.acc, nil, newBalance + message.amount, newBalance)
+                logRequest(message.atmNumber, "withdraw", message.acc, nil, newBalance + message.amount * CONFIG.EXCHANGERATE, newBalance)
             end
         elseif message.type == "transfer" then
             if not message.targetAcc then

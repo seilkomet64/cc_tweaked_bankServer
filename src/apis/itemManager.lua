@@ -1,20 +1,24 @@
 local digitizer = peripheral.find("digitizer")
-local inventory = peripheral.find("minecraft:chest")
+local inventory = {peripheral.find("minecraft:chest")} -- Table of inventories
 
--- Get Currency in a ID
+-- Get Currency in an ID
 local function getCurrencyInId(id)
-    return digitizer.getIDInfo(id).item.count
+    local success, info = pcall(function() return digitizer.getIDInfo(id).item.count end)
+
+    if success then return info else return nil end
 end
 
 -- Check how much of an Item is inside the inventory
 local function getCurrency(itemName)
     local total = 0
-    for slot, item in pairs(inventory.list()) do
-        if item.name == itemName then
-            total = total + item.count
+    for _, inv in pairs(inventory) do
+        local itemList = inv.list() -- Cache the inventory list
+        for _, item in pairs(itemList) do
+            if item.name == itemName then
+                total = total + item.count
+            end
         end
     end
-
     return total
 end
 
@@ -25,22 +29,32 @@ local function materializeItems(digitizedIds)
 
     for _, id in ipairs(digitizedIds) do
         -- If something is stuck in the digitizer
-        if digitizer.getItemDetail(1) then
+        local itemInDigitizer = digitizer.getItemDetail(1)
+        if itemInDigitizer then
+            local counter = itemInDigitizer.count
             -- Try pushing it out once
-            digitizer.pushItems(peripheral.getName(inventory), 1)
+            for _, inv in pairs(inventory) do
+                counter = counter - digitizer.pushItems(peripheral.getName(inv), 1)
+
+                if counter == 0 then break end
+            end
 
             -- if still there we are FULL
-            if digitizer.getItemDetail(1) then
+            if counter > 0 then
                 print("Bank is full! Upgrade Storage!")
                 error("Bank is full!")
             end
         end
 
-        local success, item = pcall(function() return digitizer.getIDInfo(id).item end)
-
-        if success then
+        local itemCount = getCurrencyInId(id)
+        if itemCount then
             digitizer.rematerialize(id)
-            digitizer.pushItems(peripheral.getName(inventory), 1)
+            count = count + itemCount
+            for _, inv in pairs(inventory) do
+                itemCount = itemCount - digitizer.pushItems(peripheral.getName(inv), 1)
+
+                if itemCount == 0 then break end
+            end
         else
             return "Unable to find id for materialization"
         end
@@ -50,35 +64,49 @@ local function materializeItems(digitizedIds)
 end
 
 local function digitizeAmount(amount)
-    if getCurrency(CONFIG.CURRENCYITEM) < amount then print("Not enough Currency in Inventory!") error("Bank is too poor!") end
+    if getCurrency(CONFIG.CURRENCYITEM) < amount then
+        print("Not enough Currency in Inventory!")
+        error("Bank is too poor!")
+    end
 
     local digitalIDs = {}
-    -- Loop through all slots in the source inventory
-    for slot = 1, inventory.size() do
-        local stack = inventory.getItemDetail(slot)
 
-        -- Check if the stack contains the item we are looking for
-        if stack and stack.name == CONFIG.CURRENCYITEM then                        
-            -- Calculate the amount to transfer in this batch (maximum that can fit in the destination)
-            local batchSize = math.min(amount, CONFIG.CURRENCYSTACKSIZE)  -- Assuming StackSize is 64 (adjust as needed)
+    -- Loop through all inventories
+    for _, inv in pairs(inventory) do
+        local invSize = inv.size() -- Cache the size of the inventory
+        for slot = 1, invSize do
+            local stack = inv.getItemDetail(slot)
 
-            -- Push the items to the destination, limited to batchSize
-            inventory.pushItems(peripheral.getName(digitizer), slot, batchSize)
-            digitalIDs[#digitalIDs+1] = digitizer.digitize()
+            -- Check if the stack contains the item we are looking for
+            if stack and stack.name == CONFIG.CURRENCYITEM then
+                -- Calculate the amount to transfer in this batch (maximum that can fit in the destination)
+                local batchSize = math.min(amount, CONFIG.CURRENCYSTACKSIZE) -- Assuming StackSize is 64 (adjust as needed)
 
-            -- Decrease the amount left to transfer
-            amount = amount - batchSize
+                -- Push the items to the digitizer, limited to batchSize
+                inv.pushItems(peripheral.getName(digitizer), slot, batchSize)
+                digitalIDs[#digitalIDs + 1] = digitizer.digitize()
 
+                -- Decrease the amount left to transfer
+                amount = amount - batchSize
 
-            -- If all items have been transferred, exit the loop
-            if amount == 0 then
-                break
+                -- If all items have been transferred, exit the loop
+                if amount == 0 then
+                    break
+                end
             end
+        end
+
+        if amount == 0 then
+            break
         end
     end
 
     return digitalIDs
 end
 
-return {getCurrency = getCurrency, digitizeAmount = digitizeAmount, materializeItems = materializeItems, getCurrencyInId = getCurrencyInId}
-
+return {
+    getCurrency = getCurrency,
+    digitizeAmount = digitizeAmount,
+    materializeItems = materializeItems,
+    getCurrencyInId = getCurrencyInId
+}

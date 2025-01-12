@@ -109,6 +109,10 @@ local function StartBankingSystem()
             logRequest(message.atmNumber, message.type, message.acc)
         elseif message.type == "confirmTransaction" then
             bankAPI.confirmTransaction(message.acc, message.transactionID)
+        elseif message.type == "createAccount" then
+            local creationSuccess, creationMessage = bankAPI.createAccount(message.acc, message.pin)
+            rednet.send(computer_id, {success = creationSuccess, message = creationMessage})
+            print("New account " .. message.acc .. " was created!")
         end
     end
 end

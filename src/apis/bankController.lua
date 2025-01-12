@@ -111,7 +111,7 @@ local function StartBankingSystem()
             bankAPI.confirmTransaction(message.acc, message.transactionID)
         elseif message.type == "createAccount" then
             local creationSuccess, creationMessage = bankAPI.createAccount(message.acc, message.pin)
-            rednet.send(computer_id, {success = creationSuccess, message = creationMessage})
+            rednet.send(computer_id, {success = creationSuccess, message = creationMessage}, protocol)
             print("New account " .. message.acc .. " was created!")
         end
     end

@@ -253,9 +253,8 @@ function bankAPI.createAccount(acc, pin)
         return false, "Account already exists"
     end
 
-    local newBalance = 0
     file = fs.open("account/" .. acc, "w")
-    file.writeLine(newBalance)
+    file.writeLine(0)
     file.writeLine(pin)
     file.close()
 

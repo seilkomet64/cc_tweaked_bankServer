@@ -194,7 +194,7 @@ function bankAPI.transfer(acc, amount, targetAcc, pin)
                 balance = balance - amount
                 targetBalance = targetBalance + amount
                 overwriteFile(acc, balance, correctPin)
-                overwriteFile(acc, targetBalance, targetCorrectPin)
+                overwriteFile(targetAcc, targetBalance, targetCorrectPin)
 
                 file.close()
                 targetFile.close()
